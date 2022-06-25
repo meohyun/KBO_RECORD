@@ -1,3 +1,4 @@
+import cgi
 from selenium import webdriver
 from datetime import date
 import time
@@ -84,6 +85,7 @@ def Pitcher_Record():
     select_team.select_by_visible_text(f'{teamname}')
     time.sleep(2)
 
+
     # record-1 Split by line 
     records = browser.find_element(By.CSS_SELECTOR,"div.record_result").text
     record = records.split('\n')
@@ -102,7 +104,7 @@ def Pitcher_Record():
     df3.drop(['순위','IP','H','HR','BB','HBP','SO','R','ER','WHIP','None'],axis=1,inplace=True)
     df3['포지션'] = df3['포지션'].replace([teamname],'투수')
     
-    #잘못된 데이터 다시 수정
+    # 잘못된 데이터 다시 수정
     ips = []
     hs = []
     hrs = []
@@ -112,6 +114,22 @@ def Pitcher_Record():
     rs = []
     ers = []
     whips = []
+    cgs= []
+    shos = []
+    qss = []
+    bsvs = []
+    tbfs = []
+    nps = []
+    avgs = []
+    b22 = []
+    b32 = []
+    sacs = []
+    sfs = []
+    ibbs = []
+    wps = []
+    bks = []
+
+
     for num in range(1,len(record)):
         
         ip = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[11]').text
@@ -132,9 +150,7 @@ def Pitcher_Record():
         rs.append(r)
         ers.append(er)
         whips.append(whip)
-
-
-    df3['IP'] = ips
+    
     df3['H'] =  hs
     df3['HR'] = hrs
     df3['BB'] = bbs
@@ -143,12 +159,64 @@ def Pitcher_Record():
     df3['R'] = rs
     df3['ER'] = ers
     df3['WHIP'] = whips
+    df3.insert(2,'IP',ips)
+
+    browser.find_element(By.XPATH,'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[2]/div[2]/a[2]').click()
+
+    for num in range(1,len(record)):
+        
+        cg = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[5]').text
+        sho = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[6]').text
+        qs = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[7]').text
+        bsv = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[8]').text
+        tbf = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[9]').text
+        np = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[10]').text
+        avg = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[11]').text
+        b2 = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[12]').text
+        b3 = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[13]').text
+        sac = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[14]').text
+        sf = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[15]').text
+        ibb = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[16]').text
+        wp = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[17]').text
+        bk = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[18]').text
+
+
+        cgs.append(cg)
+        shos.append(sho)
+        qss.append(qs)
+        bsvs.append(bsv)
+        tbfs.append(tbf)
+        nps.append(np)
+        avgs.append(avg)
+        b22.append(b2)
+        b32.append(b3)
+        sacs.append(sac)
+        sfs.append(sf)
+        ibbs.append(ibb)
+        wps.append(wp)
+        bks.append(bk)
+
+    
+    df3['CG'] =  cgs
+    df3['SHO'] = shos
+    df3['QS'] = qss
+    df3['BSV'] = bsvs
+    df3['TBF'] = tbfs
+    df3['NP'] = nps
+    df3['AVG'] = avgs
+    df3['2B'] = b22
+    df3['3B'] = b32
+    df3['SAC'] = sacs
+    df3['SF'] = sfs
+    df3['IBB'] = ibbs
+    df3['WP'] = wps
+    df3['BK'] = bks
 
     for p in range(len(df3.columns)):
         df3[df3.columns[p]] = df3[df3.columns[p]].replace(['-'],10000)
 
     try :
-        for k in range(2,17):
+        for k in range(3,32):
             if df3[df3.columns[k]].dtypes== object:
                 df3[df3.columns[k]] = df3[df3.columns[k]].astype(float)
     except:
@@ -156,7 +224,7 @@ def Pitcher_Record():
     
     for l in range(len(df3.columns)):
         df3[df3.columns[l]] = df3[df3.columns[l]].replace([10000],'-')
-
+    
     # put the data in Excel
     with pd.ExcelWriter(filename) as writer:
         df2[df2.포지션 == '포수'].to_excel(writer,sheet_name='포수')
