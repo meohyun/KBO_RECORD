@@ -1,11 +1,11 @@
-import cgi
 from selenium import webdriver
 from datetime import date
 import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 import pandas as pd
-import numpy as np
+import excel2json
+import json
 
 # datetime
 today = date.today()
@@ -237,11 +237,11 @@ def Pitcher_Record():
 
 
 
-
 Hitter_Record('포수')
 Hitter_Record('내야수')
 Hitter_Record('외야수')
 Pitcher_Record()
+
 
 
 browser.quit()
