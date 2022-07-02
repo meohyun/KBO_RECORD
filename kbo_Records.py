@@ -4,8 +4,6 @@ import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 import pandas as pd
-import excel2json
-import json
 
 # datetime
 today = date.today()
@@ -26,28 +24,43 @@ filename = f'C:/Users/82108/Desktop/KBO/{teamname}_기록.xlsx'
 # empty dataframe
 df2 = pd.DataFrame()
 
+# Create empty Lists
+ips,hs,hrs,bbs,hbps,sos,rs,ers,whips,cgs,shos,qss,bsvs,tbfs,nps,avgs,b22,b32 = ([] for i in range(18))
+sacs,sfs,ibbs,wps,bks,BBs,IBBs,HBPs,SOs,GDPs,SLGs,OBPs,OPSs,MHs,RISPs,PH_BAs= ([] for i in range(16))
+GSs,Wgss,Wgrs,GFs,SVOs,TSs,gdps,GOs,AOs,GO_AOs= ([] for i in range(10))
+
+# convert data type(str > int)
+def convert_data_type(dataframe,num):
+    for p in range(len(dataframe.columns)):
+        dataframe[dataframe.columns[p]] = dataframe[dataframe.columns[p]].replace(['-'],10000)
+    
+    for k in range(num,len(dataframe.columns)):
+        if dataframe[dataframe.columns[k]].dtypes == object:
+            dataframe[dataframe.columns[k]] = dataframe[dataframe.columns[k]].astype(float)
+
+    for l in range(len(dataframe.columns)):
+        dataframe[dataframe.columns[l]] = dataframe[dataframe.columns[l]].replace([10000],'-')
+    
 # Hitter_Record
 def Hitter_Record(pos):
     global df2
+
     position_choose = browser.find_element(By.XPATH,'//*[@id="cphContents_cphContents_cphContents_ddlPos_ddlPos"]')
     select_position = Select(position_choose)
 
     select_position.select_by_visible_text(pos)
-    time.sleep(3)
+    time.sleep(2)
 
-
-    # record-1 Split by line 
+   # record-1 Split by line 
     records = browser.find_element(By.CSS_SELECTOR,"div.record_result").text
     record = records.split('\n')
     del record[-1]
     
-   
     # record-2 Split by empty
     record_split= []
     for j in range(len(record)):
         a = record[j].split()
         record_split.append(a)
-
 
     df = pd.DataFrame(record_split)
 
@@ -56,17 +69,56 @@ def Hitter_Record(pos):
     df.drop(['순위'],axis=1,inplace=True)
     df['포지션'] = df['포지션'].replace([teamname],pos)
 
-    for p in range(len(df.columns)):
-        df[df.columns[p]] = df[df.columns[p]].replace(['-'],10000)
-    
-    for k in range(2,15):
-        if df[df.columns[k]].dtypes == object:
-            df[df.columns[k]] = df[df.columns[k]].astype(float)
+    # click button to next page
+    browser.find_element(By.XPATH,'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[2]/div[2]/a[2]').click()
 
-    for l in range(len(df.columns)):
-        df[df.columns[l]] = df[df.columns[l]].replace([10000],'-')
+    time.sleep(2)
 
     df2 = df2.append(df)
+
+    for num in range(1,len(record)):
+        bb = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[5]').text
+        ibb = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[6]').text
+        hbp = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[7]').text
+        so = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[8]').text
+        gdp = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[9]').text
+        slg = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[10]').text
+        obp = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[11]').text
+        ops = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[12]').text
+        mh = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[13]').text
+        risp = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[14]').text
+        ph_ba = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[15]').text
+
+        BBs.append(bb)
+        IBBs.append(ibb)
+        HBPs.append(hbp)
+        SOs.append(so)
+        GDPs.append(gdp)
+        SLGs.append(slg)
+        OBPs.append(obp)
+        OPSs.append(ops)
+        MHs.append(mh)
+        RISPs.append(risp)
+        PH_BAs.append(ph_ba)
+
+        
+    df2['BB'] = BBs
+    df2['IBB'] = IBBs
+    df2['HBP'] = HBPs
+    df2['SO'] = SOs
+    df2['GDP'] = GDPs
+    df2['SLG'] = SLGs
+    df2['OBP'] = OBPs
+    df2['OPS'] = OPSs
+    df2['MH'] = MHs
+    df2['RISP'] = RISPs
+    df2['PH-BA'] = PH_BAs
+    
+    convert_data_type(df2,2)
+    
+    # return
+    browser.find_element(By.XPATH,'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[2]/div[2]/a[1]').click()
+    
   
 # Pitcher record
 def Pitcher_Record():
@@ -84,7 +136,6 @@ def Pitcher_Record():
     select_team = Select(team)
     select_team.select_by_visible_text(f'{teamname}')
     time.sleep(2)
-
 
     # record-1 Split by line 
     records = browser.find_element(By.CSS_SELECTOR,"div.record_result").text
@@ -104,31 +155,6 @@ def Pitcher_Record():
     df3.drop(['순위','IP','H','HR','BB','HBP','SO','R','ER','WHIP','None'],axis=1,inplace=True)
     df3['포지션'] = df3['포지션'].replace([teamname],'투수')
     
-    # 잘못된 데이터 다시 수정
-    ips = []
-    hs = []
-    hrs = []
-    bbs = []
-    hbps = []
-    sos = []
-    rs = []
-    ers = []
-    whips = []
-    cgs= []
-    shos = []
-    qss = []
-    bsvs = []
-    tbfs = []
-    nps = []
-    avgs = []
-    b22 = []
-    b32 = []
-    sacs = []
-    sfs = []
-    ibbs = []
-    wps = []
-    bks = []
-
 
     for num in range(1,len(record)):
         
@@ -212,18 +238,50 @@ def Pitcher_Record():
     df3['WP'] = wps
     df3['BK'] = bks
 
-    for p in range(len(df3.columns)):
-        df3[df3.columns[p]] = df3[df3.columns[p]].replace(['-'],10000)
+    browser.find_element(By.XPATH,'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[2]/div[1]/ul/li[2]/a').click()
 
-    try :
-        for k in range(3,32):
-            if df3[df3.columns[k]].dtypes== object:
-                df3[df3.columns[k]] = df3[df3.columns[k]].astype(float)
-    except:
-        pass
-    
-    for l in range(len(df3.columns)):
-        df3[df3.columns[l]] = df3[df3.columns[l]].replace([10000],'-')
+    for num in range(1,len(record)):
+        gs= browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[5]').text
+        wgs = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[6]').text
+        wgr = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[7]').text
+        gf = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[8]').text
+        svo = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[9]').text
+        ts = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[10]').text
+        gdp = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[11]').text
+        go = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[12]').text
+        ao = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[13]').text
+        go_ao = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[14]').text
+        
+        GSs.append(gs)
+        Wgss.append(wgs)
+        Wgrs.append(wgr)
+        GFs.append(gf)
+        SVOs.append(svo)
+        TSs.append(ts)
+        gdps.append(gdp)
+        GOs.append(go)
+        AOs.append(ao)
+        GO_AOs.append(go_ao)
+
+    df3['GS'] = GSs
+    df3['Wgs'] = Wgss
+    df3['Wgr'] = Wgrs
+    df3['GF'] = GFs
+    df3['SVO'] = SVOs
+    df3['TS'] = TSs
+    df3['GDP'] = gdps
+    df3['GO'] = GOs
+    df3['AO'] = AOs
+    df3['GO/AO'] = GO_AOs        
+
+    convert_data_type(df3,3)
+    df3 = df3.sort_values(by='GS',ascending=False)
+
+    empty_list = []
+    for i in range(1,len(record)):
+        empty_list.append(i)
+    df3 = df3.set_index(keys=[empty_list],inplace=False)
+        
     
     # put the data in Excel
     with pd.ExcelWriter(filename) as writer:
@@ -231,7 +289,6 @@ def Pitcher_Record():
         df2[df2.포지션 == '내야수'].to_excel(writer,sheet_name='내야수')
         df2[df2.포지션 == '외야수'].to_excel(writer,sheet_name='외야수')
         df3[df3.포지션 == '투수'].to_excel(writer,sheet_name='투수')
-    
 
     browser.switch_to.window(curr_handle)
 
