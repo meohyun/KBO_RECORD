@@ -72,7 +72,7 @@ def Hitter_Record(pos):
     # click button to next page
     browser.find_element(By.XPATH,'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[2]/div[2]/a[2]').click()
 
-    time.sleep(2)
+    time.sleep(1)
 
     df2 = df2.append(df)
 
@@ -119,7 +119,6 @@ def Hitter_Record(pos):
     # return
     browser.find_element(By.XPATH,'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[2]/div[2]/a[1]').click()
     
-  
 # Pitcher record
 def Pitcher_Record():
     browser.find_element(By.XPATH,'//*[@id="contents"]/div[2]/div[2]/ul/li[2]/a').click()
@@ -206,7 +205,6 @@ def Pitcher_Record():
         wp = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[17]').text
         bk = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[18]').text
 
-
         cgs.append(cg)
         shos.append(sho)
         qss.append(qs)
@@ -222,7 +220,6 @@ def Pitcher_Record():
         wps.append(wp)
         bks.append(bk)
 
-    
     df3['CG'] =  cgs
     df3['SHO'] = shos
     df3['QS'] = qss
@@ -292,13 +289,9 @@ def Pitcher_Record():
 
     browser.switch_to.window(curr_handle)
 
-
-
 Hitter_Record('포수')
 Hitter_Record('내야수')
 Hitter_Record('외야수')
 Pitcher_Record()
-
-
 
 browser.quit()
