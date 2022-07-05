@@ -9,16 +9,25 @@ import pandas as pd
 today = date.today()
 current_time = today.strftime('%Y/%m/%d')
 
+# input
+teamname = input("Team: ")
 browser = webdriver.Chrome("./chromedriver.exe")
 browser.get("https://www.koreabaseball.com/Record/Player/HitterBasic/Basic1.aspx")
 
+# team
+team = browser.find_element(By.XPATH,'//*[@id="cphContents_cphContents_cphContents_ddlTeam_ddlTeam"]')
+select_team = Select(team)
+select_team.select_by_visible_text(f'{teamname}')
+
+filename = f'C:/Users/82108/Desktop/KBO/{teamname}_기록.xlsx'
+
 # empty dataframe
-df = pd.DataFrame()
 df2 = pd.DataFrame()
 
 # Create empty Lists
-BBs,IBBs,HBPs,SOs,GDPs,SLGs,OBPs,OPSs,MHs,RISPs,PH_BAs= ([] for i in range(11))
-teams = ['한화','삼성','키움','SSG','두산','KIA','KT','LG','NC','롯데']
+ips,hs,hrs,bbs,hbps,sos,rs,ers,whips,cgs,shos,qss,bsvs,tbfs,nps,avgs,b22,b32 = ([] for i in range(18))
+sacs,sfs,ibbs,wps,bks,BBs,IBBs,HBPs,SOs,GDPs,SLGs,OBPs,OPSs,MHs,RISPs,PH_BAs= ([] for i in range(16))
+GSs,Wgss,Wgrs,GFs,SVOs,TSs,gdps,GOs,AOs,GO_AOs= ([] for i in range(10))
 
 # convert data type(str > int)
 def convert_data_type(dataframe,num):
@@ -33,15 +42,9 @@ def convert_data_type(dataframe,num):
         dataframe[dataframe.columns[l]] = dataframe[dataframe.columns[l]].replace([10000],'-')
     
 # Hitter_Record
-def Hitter_Record(pos,teamname):
+def Hitter_Record(pos):
     global df2
-    record = []
 
-    # team
-    team = browser.find_element(By.XPATH,'//*[@id="cphContents_cphContents_cphContents_ddlTeam_ddlTeam"]')
-    select_team = Select(team)
-    select_team.select_by_visible_text(f'{teamname}')
-    
     position_choose = browser.find_element(By.XPATH,'//*[@id="cphContents_cphContents_cphContents_ddlPos_ddlPos"]')
     select_position = Select(position_choose)
 
@@ -98,6 +101,7 @@ def Hitter_Record(pos,teamname):
         RISPs.append(risp)
         PH_BAs.append(ph_ba)
 
+        
     df2['BB'] = BBs
     df2['IBB'] = IBBs
     df2['HBP'] = HBPs
@@ -116,30 +120,31 @@ def Hitter_Record(pos,teamname):
     browser.find_element(By.XPATH,'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[2]/div[2]/a[1]').click()
     
 # Pitcher record
-def Pitcher_Record(teamname):
-    sacs,sfs,ibbs,wps,bks,ips,hs,hrs,bbs,hbps,sos,rs,ers,whips,cgs,shos,qss,bsvs,tbfs,nps,avgs,b22,b32 = ([] for i in range(23))
-    GSs,Wgss,Wgrs,GFs,SVOs,TSs,gdps,GOs,AOs,GO_AOs= ([] for i in range(10))
-    pitcher_record = []
-
-    filename = f'C:/Users/82108/Desktop/KBO/{teamname}_기록.xlsx'
-
+def Pitcher_Record():
     browser.find_element(By.XPATH,'//*[@id="contents"]/div[2]/div[2]/ul/li[2]/a').click()
+
+    time.sleep(2)
+    curr_handle = browser.current_window_handle 
+    handles = browser.window_handles
+
+    for handle in handles:
+        browser.switch_to.window(handle)
 
     #team
     team = browser.find_element(By.XPATH,'//*[@id="cphContents_cphContents_cphContents_ddlTeam_ddlTeam"]')
     select_team = Select(team)
     select_team.select_by_visible_text(f'{teamname}')
-    time.sleep(1)
+    time.sleep(2)
 
     # record-1 Split by line 
     records = browser.find_element(By.CSS_SELECTOR,"div.record_result").text
-    pitcher_record = records.split('\n')
-    del pitcher_record[-1]
+    record = records.split('\n')
+    del record[-1]
 
     # record-2 Split by empty
     record_split= []
-    for j in range(len(pitcher_record)):
-        a = pitcher_record[j].split()
+    for j in range(len(record)):
+        a = record[j].split()
         record_split.append(a)
 
     df3 = pd.DataFrame(record_split)
@@ -149,8 +154,9 @@ def Pitcher_Record(teamname):
     df3.drop(['순위','IP','H','HR','BB','HBP','SO','R','ER','WHIP','None'],axis=1,inplace=True)
     df3['포지션'] = df3['포지션'].replace([teamname],'투수')
     
-    for num in range(1,len(df3.index)+1):
 
+    for num in range(1,len(record)):
+        
         ip = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[11]').text
         h = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[12]').text
         hr = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[13]').text
@@ -169,7 +175,7 @@ def Pitcher_Record(teamname):
         rs.append(r)
         ers.append(er)
         whips.append(whip)
-
+    
     df3['H'] =  hs
     df3['HR'] = hrs
     df3['BB'] = bbs
@@ -182,7 +188,7 @@ def Pitcher_Record(teamname):
 
     browser.find_element(By.XPATH,'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[2]/div[2]/a[2]').click()
 
-    for num in range(1,len(df3.index)+1):
+    for num in range(1,len(record)):
         
         cg = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[5]').text
         sho = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[6]').text
@@ -231,7 +237,7 @@ def Pitcher_Record(teamname):
 
     browser.find_element(By.XPATH,'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[2]/div[1]/ul/li[2]/a').click()
 
-    for num in range(1,len(df3.index)+1):
+    for num in range(1,len(record)):
         gs= browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[5]').text
         wgs = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[6]').text
         wgr = browser.find_element(By.XPATH,f'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[3]/table/tbody/tr[{num}]/td[7]').text
@@ -269,9 +275,10 @@ def Pitcher_Record(teamname):
     df3 = df3.sort_values(by='GS',ascending=False)
 
     empty_list = []
-    for i in range(1,len(pitcher_record)):
+    for i in range(1,len(record)):
         empty_list.append(i)
     df3 = df3.set_index(keys=[empty_list],inplace=False)
+        
     
     # put the data in Excel
     with pd.ExcelWriter(filename) as writer:
@@ -280,21 +287,11 @@ def Pitcher_Record(teamname):
         df2[df2.포지션 == '외야수'].to_excel(writer,sheet_name='외야수')
         df3[df3.포지션 == '투수'].to_excel(writer,sheet_name='투수')
 
-    # browser.switch_to.window(curr_handle) 
+    browser.switch_to.window(curr_handle)
 
-    browser.find_element(By.XPATH,'//*[@id="contents"]/div[2]/div[2]/ul/li[1]/a').click()
-
-i = 0
-while True:
-    
-    Hitter_Record('포수',teams[i])
-    Hitter_Record('내야수',teams[i])
-    Hitter_Record('외야수',teams[i])
-    Pitcher_Record(teams[i])
-
-    i+=1
-
-    if i == 10:
-        break
+Hitter_Record('포수')
+Hitter_Record('내야수')
+Hitter_Record('외야수')
+Pitcher_Record()
 
 browser.quit()
