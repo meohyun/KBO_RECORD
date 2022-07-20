@@ -1,14 +1,9 @@
 from selenium import webdriver
-from datetime import date
-import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select,WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import time
 import pandas as pd
-
-# datetime
-today = date.today()
-current_time = today.strftime('%Y/%m/%d')
 
 browser = webdriver.Chrome("./chromedriver.exe")
 browser.get("https://www.koreabaseball.com/Record/Player/HitterBasic/Basic1.aspx")
@@ -107,8 +102,6 @@ def split_data_by_pos(pos,teamname):
 
     # return
     browser.find_element(By.XPATH,'//*[@id="cphContents_cphContents_cphContents_udpContent"]/div[2]/div[2]/a[1]').click()
-
-    return df
 
 
 # Hitter_Record
